@@ -1,0 +1,77 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+
+#loading dataset to a Pandas DataFrame
+credit_card_data = pd.read_csv('creditcard.csv')
+
+credit_card_data.head()
+
+#checking distribution of legit transactions/fraudulent transactions
+credit_card_data.Class.value_counts()
+
+credit_card_data.info()
+
+#checking # of missing values
+credit_card_data.isnull().sum()
+
+legit = credit_card_data[credit_card_data.Class == 0]
+fraud = credit_card_data[credit_card_data.Class == 1]
+
+print(legit.shape)
+print(fraud.shape)
+
+#statistical measures of the data
+legit.Amount.describe()
+
+fraud.Amount.describe()
+
+#comparing values for both transactions
+credit_card_data.groupby('Class').mean()
+
+#Since dependent variable is unbalanced, I will build a sample dataset containing similar distribution of normal 
+#and Fraudulent Transactions
+legit_sample = legit.sample(n=492)
+
+#Concatenating/merging two DataFrames
+data = pd.concat([legit_sample, fraud], axis = 0)
+data['Class'].value_counts()
+
+#Separating dependent variable from independent variables
+X = data.drop(columns = 'Class', axis = 1)
+Y = data['Class']
+
+#Splitting data into Training and Testing data
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, stratify=Y, random_state = 2)
+
+print(X.shape, X_train.shape, X_test.shape)
+
+#Model Training
+model = LogisticRegression()
+
+#Training Logistic Regression Model with Training Data
+model.fit(X_train, Y_train)
+
+#Model Evaluation
+#Accuracy Score on Training Data
+X_train_prediction = model.predict(X_train)
+training_data_accuracy = accuracy_score(X_train_prediction, Y_train)
+
+print('Accuracy on Training Data: ', training_data_accuracy)
+
+# accuracy on test data
+X_test_prediction = model.predict(X_test)
+test_data_accuracy = accuracy_score(X_test_prediction, Y_test)
+
+print('Accuracy on Testing Data: ', test_data_accuracy)
+
+print('Confusion Matrix')
+print(confusion_matrix(X_test_prediction, Y_test))
+print('\n')
+print('Accuracy Score')
+print(accuracy_score(X_test_prediction, Y_test))
+print('\n')
+print('Classification Report')
+print(classification_report(X_test_prediction, Y_test))
